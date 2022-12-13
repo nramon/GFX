@@ -1,2 +1,2 @@
-# gfx
-Graphics programming stuff
+# GFX
+Graphics programming stuff.
