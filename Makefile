@@ -45,7 +45,7 @@ export PATH    := $(WATCOM)/binl64:$(PATH)
 
 C_SOURCES  := vga/vga.c fade/fade.c stars/stars.c
 # cppcheck does not know the Borland extensions: hide far pointers and asm blocks.
-CPPCHECK   := cppcheck -q -Ivga -Dfar= -D__far= -Dasm= --suppress=missingIncludeSystem
+CPPCHECK   := cppcheck -q -Ivga -Dfar= -D__far= -Dasm= --suppress=missingIncludeSystem --suppress=unknownMacro
 
 all: $(addprefix build/,$(addsuffix .exe,$(DEMOS)))
 
