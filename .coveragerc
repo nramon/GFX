@@ -1,0 +1,7 @@
+[run]
+branch = True
+
+[report]
+include = */util/*
+show_missing = True
+fail_under = 100

@@ -1,4 +1,5 @@
 """Tests for util/bmp2raw.py, which is a script, so it is run as a subprocess."""
+import os
 import subprocess
 import sys
 from pathlib import Path
@@ -12,11 +13,16 @@ PIXELS = [0, 1, 127, 128, 200, 255, 3, 4]
 
 
 def run(tmp_path, *args):
-    """Run bmp2raw.py inside tmp_path and return the completed process."""
-    return subprocess.run(
-        [sys.executable, str(SCRIPT), *args],
-        cwd=tmp_path, capture_output=True, text=True, check=False,
-    )
+    """Run bmp2raw.py inside tmp_path and return the completed process.
+
+    With BMP2RAW_COVERAGE set (see 'make coverage'), the script runs under
+    coverage so that the subprocess is measured too. COVERAGE_FILE, set by
+    the caller, says where the data goes.
+    """
+    cmd = [sys.executable, str(SCRIPT), *args]
+    if os.environ.get("BMP2RAW_COVERAGE"):
+        cmd = [sys.executable, "-m", "coverage", "run", "--parallel-mode", *cmd[1:]]
+    return subprocess.run(cmd, cwd=tmp_path, capture_output=True, text=True, check=False)
 
 
 def make_paletted_bmp(path, palette):

@@ -6,6 +6,7 @@
 #   make fade         Build a demo and run it in DOSBox (same as make run-fade).
 #   make build/fade.exe   Build a single demo without running it.
 #   make test         Run the Python tests (pytest).
+#   make coverage     Same, measuring coverage of the Python code (writes coverage.xml).
 #   make lint         Lint Python, shell and C (fails on problems).
 #   make analyze      Extra static analysis of the C code (informational).
 #   make clean        Remove build output.
@@ -40,7 +41,7 @@ export INCLUDE := $(WATCOM)/h
 export PATH    := $(WATCOM)/binl64:$(PATH)
 
 .PHONY: all clean toolchain check $(DEMOS) $(RUNS) \
-        test lint lint-py lint-sh lint-c analyze
+        test coverage lint lint-py lint-sh lint-c analyze
 
 C_SOURCES  := vga/vga.c fade/fade.c stars/stars.c
 # cppcheck does not know the Borland extensions: hide far pointers and asm blocks.
@@ -98,6 +99,14 @@ $(RUNS): run-%: build/%.exe
 test:
 	python3 -m pytest -q tests
 
+# Same tests, measuring the coverage of util/bmp2raw.py (needs coverage). Writes coverage.xml.
+coverage:
+	rm -f .coverage .coverage.*
+	BMP2RAW_COVERAGE=1 COVERAGE_FILE=$(CURDIR)/.coverage python3 -m pytest -q tests
+	COVERAGE_FILE=$(CURDIR)/.coverage python3 -m coverage combine -q
+	COVERAGE_FILE=$(CURDIR)/.coverage python3 -m coverage report
+	COVERAGE_FILE=$(CURDIR)/.coverage python3 -m coverage xml -q
+
 lint: lint-py lint-sh lint-c
 
 lint-py:
@@ -126,4 +135,4 @@ analyze: check
 	-for f in $(C_SOURCES); do wcc $(CFLAGS) -wx -zs $$f; done
 
 clean:
-	rm -rf build
+	rm -rf build coverage.xml .coverage .coverage.*

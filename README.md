@@ -1,5 +1,9 @@
 # GFX
 
+[![CI](https://github.com/nramon/GFX/actions/workflows/ci.yml/badge.svg)](https://github.com/nramon/GFX/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/nramon/GFX/branch/main/graph/badge.svg)](https://codecov.io/gh/nramon/GFX)
+[![License: GPL v3](https://img.shields.io/badge/license-GPLv3-blue.svg)](LICENSE)
+
 ```
  ██████╗ ███████╗██╗  ██╗
 ██╔════╝ ██╔════╝╚██╗██╔╝
@@ -54,7 +58,7 @@ this code, like segments and far pointers, how to talk to the VGA ports, inline 
 The demos are cross-compiled to 16-bit DOS with [Open Watcom](https://github.com/open-watcom/open-watcom-v2)
 and run in DOSBox. You need `make`, `curl`, `7z` (p7zip-full) and `dosbox`.
 
-    git clone <this repository> && cd GFX
+    git clone https://github.com/nramon/GFX && cd GFX
     make toolchain    # Download Open Watcom (~130 MB) and shellcheck into .toolchain/.
     make fade         # Build and run a demo in DOSBox (also: make run-fade).
     make stars
@@ -67,8 +71,7 @@ Borland-specific names they use to their Open Watcom equivalents.
 ## Building under DOS
 
 The code was written for Turbo C++ 3.0 and Turbo Assembler. Each demo directory has a Makefile
-for Borland `MAKE`: run `MAKE` inside `fade` or `stars`, and then run the executable. (The Linux
-build is what gets tested; the DOS Makefiles were not re-tested with the latest changes.)
+for Borland `MAKE`: run `MAKE` inside `fade` or `stars`, and then run the executable.
 
 ## Repository layout
 
@@ -86,6 +89,7 @@ build is what gets tested; the DOS Makefiles were not re-tested with the latest 
 
     make test         # pytest suite for util/bmp2raw.py (needs pytest, Pillow, numpy).
     make lint         # flake8 (Python), shellcheck (shell) and cppcheck (C).
+    make coverage     # Same tests, with coverage of the Python code (needs coverage).
     make analyze      # Style findings and Open Watcom's maximum warning level.
 
 `make lint` fails only on real problems. `make analyze` is informational: it
