@@ -10,8 +10,6 @@
  * Fade effect between two images.                                            *
  ******************************************************************************/
 void main() {
-	int k;
-	long int i, j;
 	byte_t far *img1, far *img2;
 	pal_t pal1, pal2;
 
@@ -25,15 +23,21 @@ void main() {
 	}
 	img2 = (byte_t far *)farmalloc(VGA_BUFFSIZE);
 	if (img2 == NULL) {
-		farfree((void *)img1);
+		farfree((void far *)img1);
 		exit(1);
 	}
 
 	/* Load the two images and their respective palettes.*/
-	vga_read_buffer("img1.raw", img1);
-	vga_read_pal("img1.pal", pal1);
-	vga_read_buffer("img2.raw", img2);
-	vga_read_pal("img2.pal", pal2);
+	if (vga_read_buffer("img1.raw", img1) != 0 ||
+	    vga_read_pal("img1.pal", pal1) != 0 ||
+	    vga_read_buffer("img2.raw", img2) != 0 ||
+	    vga_read_pal("img2.pal", pal2) != 0) {
+		printf("Could not load the images.\n");
+		farfree((void far *)img2);
+		farfree((void far *)img1);
+		vga_free();
+		exit(1);
+	}
 
 	/* Enter video mode and clear the screen, buffer and palette. */
 	vga_video_mode();

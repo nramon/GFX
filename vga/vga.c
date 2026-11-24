@@ -15,13 +15,13 @@ byte_t far *VGA_BUFFER = NULL;
 /*
  * Clear the drawing buffer.
  */
-void vga_clear_buffer() {
+void vga_clear_buffer(void) {
 	/* _fmemset(VGA_BUFFER, 0, VGA_BUFFSIZE); */
 	asm {
 		PUSH DS
 		XOR AX, AX
 		LES DI, DWORD PTR [VGA_BUFFER]
-		MOV CX, 32000d
+		MOV CX, VGA_BUFFWORDS
 		REP STOSW
 		POP DS
 	};
@@ -30,7 +30,7 @@ void vga_clear_buffer() {
 /*
  * Clear the palette.
  */
-void vga_clear_pal() {
+void vga_clear_pal(void) {
 	int c;
 
 	for (c = 0; c < VGA_COLNUM; c++) {
@@ -42,15 +42,15 @@ void vga_clear_pal() {
 }
 
 /*
- * Clear the string.
+ * Clear the screen.
  */
-void vga_clear_screen() {
+void vga_clear_screen(void) {
 	/* _fmemset(VGA_SCREEN, 0, VGA_BUFFSIZE); */
 	asm {
 		PUSH DS
 		XOR AX, AX
 		LES DI, DWORD PTR [VGA_SCREEN]
-		MOV CX, 32000d
+		MOV CX, VGA_BUFFWORDS
 		REP STOSW
 		POP DS
 	};
@@ -141,7 +141,7 @@ void vga_fade_out(pal_t pal, clock_t delay) {
 /*
  * Clean up stuff.
  */
-void vga_free() {
+void vga_free(void) {
 	farfree((void far *)VGA_BUFFER);
 	VGA_BUFFER = NULL;
 }
@@ -173,7 +173,7 @@ void vga_get_pal(pal_t pal) {
 /*
  * Initialization stuff.
  */
-void vga_init() {
+void vga_init(void) {
 	VGA_BUFFER = (byte_t far *)farmalloc(VGA_BUFFSIZE);
 	if (VGA_BUFFER == NULL) {
 		exit(1);
@@ -189,7 +189,7 @@ void vga_load_buffer(byte_t far *src) {
 		PUSH DS
 		LES DI, DWORD PTR [VGA_BUFFER]
 		LDS SI, DWORD PTR [src]
-		MOV CX, 32000d
+		MOV CX, VGA_BUFFWORDS
 		REP MOVSW
 		POP DS
 	};
@@ -204,7 +204,7 @@ void vga_load_screen(byte_t far *src) {
 		PUSH DS
 		LES DI, DWORD PTR [VGA_SCREEN]
 		LDS SI, DWORD PTR [src]
-		MOV CX, 32000d
+		MOV CX, VGA_BUFFWORDS
 		REP MOVSW
 		POP DS
 	};
@@ -214,14 +214,21 @@ void vga_load_screen(byte_t far *src) {
  * Draw a pixel to the buffer at (x, y) with color c.
  */
 void vga_put_pixel(int x, int y, byte_t c) {
-	/* VGA_BUFFER[y * VGA_RESX + x] = c; */
-	VGA_BUFFER[x + (y << 8) + (y << 6)] = c;
+
+	/* Ignore pixels outside of the screen. */
+	if (x < 0 || x >= VGA_RESX || y < 0 || y >= VGA_RESY) {
+		return;
+	}
+
+	/* VGA_BUFFER[y * VGA_RESX + x] = c; Use unsigned arithmetic, since
+	   y << 8 does not fit in a signed 16-bit int. */
+	VGA_BUFFER[x + ((unsigned int)y << 8) + ((unsigned int)y << 6)] = c;
 }
 
 /*
  * Read buffer data from disk.
  */
-int vga_read_buffer(char *fname, byte_t far *buffer) {
+int vga_read_buffer(const char *fname, byte_t far *buffer) {
 	long int i;
 	byte_t tmp_buffer[VGA_TMPBUFFSIZE];
 	FILE *fh;
@@ -230,9 +237,9 @@ int vga_read_buffer(char *fname, byte_t far *buffer) {
 	fh = fopen(fname, "rb");
 	if (fh == NULL) {
 		return -1;
-	 }
+	}
 
-	/* Write buffer data to disk in chunks. */
+	/* Read buffer data from disk in chunks. */
 	for (i = 0; i < VGA_BUFFSIZE / VGA_TMPBUFFSIZE; i++) {
 		if (fread(tmp_buffer, VGA_TMPBUFFSIZE, 1, fh) != 1) {
 			fclose(fh);
@@ -250,16 +257,14 @@ int vga_read_buffer(char *fname, byte_t far *buffer) {
 /*
  * Read palette data from disk.
  */
-int vga_read_pal(char *fname, pal_t pal) {
-	int i;
-	byte_t r, g, b;
+int vga_read_pal(const char *fname, pal_t pal) {
 	FILE *fh;
 
 	/* Open the target file. */
 	fh = fopen(fname, "rb");
 	if (fh == NULL) {
 		return -1;
-	 }
+	}
 
 	/* Read the whole palette. */
 	if (fread((void *)pal, VGA_COLNUM * VGA_RGBNUM, 1, fh) != 1) {
@@ -301,18 +306,23 @@ void vga_set_pal(pal_t pal) {
  * Wait until the given number of clock ticks have elapsed.
  */
 void vga_sleep(clock_t ticks) {
-	clock_t start, stop;
+	long int start, elapsed;
 
 	start = biostime(0, 0);
 	do {
-		stop = biostime(0, 0);
-	} while (stop - start < ticks);
+		elapsed = biostime(0, 0) - start;
+
+		/* The tick counter wrapped around at midnight. */
+		if (elapsed < 0) {
+			elapsed += VGA_TICKSPERDAY;
+		}
+	} while (elapsed < (long int)ticks);
 }
 
 /*
  * Enter text mode.
  */
-void vga_text_mode() {
+void vga_text_mode(void) {
 	asm {
 		MOV AX, 0003H
 		INT 10H
@@ -322,7 +332,7 @@ void vga_text_mode() {
 /*
  * Copy the drawing buffer to the screen.
  */
-void vga_update_screen() {
+void vga_update_screen(void) {
 
 	/* Wait for a vertical retrace. */
 	while (inportb(0x03DA) & 0x08);
@@ -333,7 +343,7 @@ void vga_update_screen() {
 		PUSH DS
 		LES DI, DWORD PTR [VGA_SCREEN]
 		LDS SI, DWORD PTR [VGA_BUFFER]
-		MOV CX, 32000d
+		MOV CX, VGA_BUFFWORDS
 		REP MOVSW
 		POP DS
 	};
@@ -342,7 +352,7 @@ void vga_update_screen() {
 /*
  * Enter video mode.
  */
-void vga_video_mode() {
+void vga_video_mode(void) {
 	asm {
 		MOV AX, 0013H
 		INT 10H
@@ -353,7 +363,7 @@ void vga_video_mode() {
 /*
  * Write the given buffer to disk.
  */
-int vga_write_buffer(char *fname, byte_t far *buffer) {
+int vga_write_buffer(const char *fname, byte_t far *buffer) {
 	long int i;
 	byte_t tmp_buffer[VGA_TMPBUFFSIZE];
 	FILE *fh;
@@ -364,7 +374,7 @@ int vga_write_buffer(char *fname, byte_t far *buffer) {
 		return -1;
 	}
 
-	/* Write buffer data to disk byte by byte (slow). */
+	/* Write buffer data to disk in chunks. */
 	for (i = 0; i < VGA_BUFFSIZE / VGA_TMPBUFFSIZE; i++) {
 		_fmemcpy(tmp_buffer, buffer + i * VGA_TMPBUFFSIZE, VGA_TMPBUFFSIZE);
 		if (fwrite(tmp_buffer, VGA_TMPBUFFSIZE, 1, fh) != 1) {
@@ -382,7 +392,7 @@ int vga_write_buffer(char *fname, byte_t far *buffer) {
 /*
  * Write the given palette to disk.
  */
-int vga_write_pal(char *fname, pal_t pal) {
+int vga_write_pal(const char *fname, pal_t pal) {
 	FILE *fh;
 
 	/* Open the target file. */

@@ -1,5 +1,6 @@
 #include <conio.h>
 #include <stdlib.h>
+#include <time.h>
 #include "vga.h"
 #include "stars.h"
 
@@ -8,13 +9,13 @@
  ******************************************************************************/
 void main() {
 	int i;
-	byte_t c;
 	star_t stars[STAR_NUM];
 
 	/* VGA initialization. */
 	vga_init();
 
 	/* Initialize stars at random. */
+	srand((unsigned int)time(NULL));
 	for (i = 0; i < STAR_NUM; i++) {
 		stars[i].x = rand() % VGA_RESX;
 		stars[i].y = rand() % VGA_RESY;
@@ -30,7 +31,7 @@ void main() {
 
 	/* Set per-depth star colors. */
 	for (i = 1; i <= STAR_DEPTH; i++) {
-		c = VGA_RGBMAX - (i << 4); /* Shift left to separate the colors. */
+		byte_t c = VGA_PALMAX - (i << 4); /* Shift left to separate the colors. */
 		vga_set_color(i, c, c, c);
 	}
 
@@ -59,7 +60,8 @@ void main() {
 		vga_update_screen();
 	}
 
-	/* Clean-up. */
+	/* Clean-up. Consume the key that was pressed. */
+	getch();
 	vga_clear_screen();
 	vga_text_mode();
 	vga_free();
