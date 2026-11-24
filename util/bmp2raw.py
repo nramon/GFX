@@ -35,6 +35,10 @@ basename = os.path.splitext(os.path.basename(sys.argv[1]))[0]
 # Load the BMP image file.
 img = Image.open(sys.argv[1])
 
+# The VGA demos expect a 320x200 image. Other sizes are fine for other uses.
+if img.size != (320, 200):
+    logging.warning("Image size is %dx%d, not 320x200.", *img.size)
+
 # Extract the pixel values.
 raw = numpy.array(img.getdata())
 if len(raw.shape) != 1:
@@ -42,16 +46,20 @@ if len(raw.shape) != 1:
     sys.exit(1)
 
 # Extract the palette.
-pal = numpy.array(img.getpalette(rawmode='RGB'))
+pal = img.getpalette(rawmode='RGB')
 if pal is None:
     logging.error("No palette information found.")
     sys.exit(1)
+pal = numpy.array(pal)
 
-# Convert the palette from 8-bit RGB to 6-bit VGA.
-pal = (pal * 63) / 255
+# Pad the palette to 256 colors, as expected by the VGA library.
+pal = numpy.pad(pal, (0, 256 * 3 - len(pal)))
+
+# Convert the palette from 8-bit RGB to 6-bit VGA (rounding to the nearest value).
+pal = (pal * 63 + 127) // 255
 
 # Write the pixel values and the palette to disk.
-raw.astype('int8').tofile(f"{basename}.raw")
+raw.astype('uint8').tofile(f"{basename}.raw")
 logging.info("Wrote file: %s.raw", basename)
-pal.astype('int8').tofile(f"{basename}.pal")
+pal.astype('uint8').tofile(f"{basename}.pal")
 logging.info("Wrote file: %s.pal", basename)

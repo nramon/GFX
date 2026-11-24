@@ -3,7 +3,6 @@ import subprocess
 import sys
 from pathlib import Path
 
-import pytest
 from PIL import Image
 
 SCRIPT = Path(__file__).resolve().parent.parent / "util" / "bmp2raw.py"
@@ -70,8 +69,8 @@ def test_palette_is_converted_to_6_bit(tmp_path):
     data = (tmp_path / "img.pal").read_bytes()
     assert len(data) == 768
     assert all(value <= 63 for value in data)
-    # 8-bit to 6-bit VGA conversion, truncating.
-    assert list(data) == [value * 63 // 255 for value in palette]
+    # 8-bit to 6-bit VGA conversion, rounding to the nearest value.
+    assert list(data) == [(value * 63 + 127) // 255 for value in palette]
 
 
 def test_output_named_after_input_in_current_directory(tmp_path):
@@ -83,13 +82,40 @@ def test_output_named_after_input_in_current_directory(tmp_path):
     assert (tmp_path / "pic.pal").exists()
 
 
-@pytest.mark.xfail(strict=True, reason=(
-    "bmp2raw.py checks 'pal is None' after wrapping getpalette() in "
-    "numpy.array(), so an image without a palette crashes with a TypeError "
-    "instead of reporting 'No palette information found'."))
 def test_image_without_palette_reports_error(tmp_path):
     Image.new("L", (4, 2), 7).save(tmp_path / "gray.bmp")
     result = run(tmp_path, "gray.bmp")
     assert result.returncode == 1
     assert "No palette" in result.stderr
     assert "Traceback" not in result.stderr
+
+
+def test_short_palette_is_padded_to_256_colors(tmp_path):
+    # A 16-color palette, with pixel values that only use those colors.
+    img = Image.new("P", (4, 2))
+    img.putpalette([255, 255, 255] * 16)
+    img.putdata([0, 1, 2, 3, 4, 5, 6, 7])
+    img.save(tmp_path / "small.bmp")
+    assert run(tmp_path, "small.bmp").returncode == 0
+
+    data = (tmp_path / "small.pal").read_bytes()
+    assert len(data) == 768
+    assert list(data[:48]) == [63] * 48
+    assert list(data[48:]) == [0] * (768 - 48)
+
+
+def test_warns_about_image_size_other_than_320x200(tmp_path):
+    make_paletted_bmp(tmp_path / "img.bmp", list(range(256)) * 3)
+    result = run(tmp_path, "img.bmp")
+    assert result.returncode == 0
+    assert "not 320x200" in result.stderr
+
+
+def test_no_warning_for_320x200_image(tmp_path):
+    img = Image.new("P", (320, 200))
+    img.putpalette(list(range(256)) * 3)
+    img.save(tmp_path / "full.bmp")
+    result = run(tmp_path, "full.bmp")
+    assert result.returncode == 0
+    assert "not 320x200" not in result.stderr
+    assert (tmp_path / "full.raw").stat().st_size == 64000
