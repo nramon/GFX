@@ -3,8 +3,8 @@
 #
 #   make toolchain    Download Open Watcom (~130 MB) and shellcheck into .toolchain/.
 #   make              Build all demos into build/.
-#   make fade         Build a single demo.
-#   make run-fade     Build a demo and run it in DOSBox.
+#   make fade         Build a demo and run it in DOSBox (same as make run-fade).
+#   make build/fade.exe   Build a single demo without running it.
 #   make test         Run the Python tests (pytest).
 #   make lint         Lint Python, shell and C (fails on problems).
 #   make analyze      Extra static analysis of the C code (informational).

@@ -8,6 +8,8 @@ direct access to video memory.
 * `vga/`: small VGA library (palette, drawing buffer, fades...).
 * `fade/`: fade effect between two images.
 * `stars/`: scrolling star field.
+* `docs/primer.md`: a short primer on the C and assembly used here. Each demo has a
+  README that works as a tutorial.
 * `util/`: helper scripts (`bmp2raw.py` needs Python with Pillow and numpy,
   `ttf2bmp.sh` needs ImageMagick).
 
@@ -18,8 +20,9 @@ and run in DOSBox. You need `make`, `curl`, `7z` (p7zip-full) and `dosbox`.
 
     make toolchain    # Download Open Watcom (~130 MB) and shellcheck into .toolchain/.
     make              # Build all demos into build/.
-    make run-fade     # Build and run a demo in DOSBox.
-    make run-stars
+    make fade         # Build and run a demo in DOSBox (also: make run-fade).
+    make stars
+    make build/stars.exe   # Build one demo without running it.
 
 The sources are built unmodified: `compat/watcom/alloc.h` maps the few
 Borland-specific names they use to their Open Watcom equivalents.
