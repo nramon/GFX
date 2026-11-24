@@ -16,13 +16,24 @@ direct access to video memory.
 The demos are cross-compiled to 16-bit DOS with [Open Watcom](https://github.com/open-watcom/open-watcom-v2)
 and run in DOSBox. You need `make`, `curl`, `7z` (p7zip-full) and `dosbox`.
 
-    make toolchain    # Download Open Watcom into .toolchain/ (once, ~130 MB).
+    make toolchain    # Download Open Watcom (~130 MB) and shellcheck into .toolchain/.
     make              # Build all demos into build/.
     make run-fade     # Build and run a demo in DOSBox.
     make run-stars
 
 The sources are built unmodified: `compat/watcom/alloc.h` maps the few
 Borland-specific names they use to their Open Watcom equivalents.
+
+## Tests, lint and static analysis
+
+    make test         # pytest suite for util/bmp2raw.py (needs pytest, Pillow, numpy).
+    make lint         # flake8 (Python), shellcheck (shell) and cppcheck (C).
+    make analyze      # Style findings and Open Watcom's maximum warning level.
+
+`make lint` fails only on real problems. `make analyze` is informational: it
+reports style issues and the compiler's maximum warnings. `make lint` uses the
+shellcheck installed by `make toolchain`, or one in the PATH; without either it
+only checks the shell syntax.
 
 ## Building under DOS
 

@@ -26,7 +26,7 @@
 #define farfree(ptr)          _ffree(ptr)
 
 /* BIOS timer ticks (only reading the tick count is supported). */
-static long biostime(int cmd, long newtime) {
+static __inline long biostime(int cmd, long newtime) {
 	unsigned long ticks;
 	(void)cmd;
 	(void)newtime;
