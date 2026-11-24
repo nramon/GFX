@@ -14,11 +14,11 @@
 #define VGA_RESY          200 /* Vertical screen resolution. */
 #define VGA_TMPBUFFSIZE   640 /* Temporary buffer size. Must be a multiple of VGA_BUFFSIZE. */
 
-#define VGA_R          0 /* Index of the R value in a palette. */
-#define VGA_G          1 /* Index of the R value in a palette. */
-#define VGA_B          2 /* Index of the R value in a palette. */
+#define VGA_R               0 /* Index of the R value in a palette. */
+#define VGA_G               1 /* Index of the R value in a palette. */
+#define VGA_B               2 /* Index of the R value in a palette. */
 
-typedef unsigned char byte_t;                 /* A byte. */
+typedef unsigned char byte_t; /* A byte. */
 typedef byte_t pal_t[256][3]; /* An array to hold palette information. */
 
 /* Video memory and drawing buffer. */

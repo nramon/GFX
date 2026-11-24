@@ -6,9 +6,9 @@
 #include "vga.h"
 #include "fade.h"
 
-/*
- * Fade effect between two images.
- */
+/******************************************************************************
+ * Fade effect between two images.                                            *
+ ******************************************************************************/
 void main() {
 	int k;
 	long int i, j;

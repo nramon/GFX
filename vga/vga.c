@@ -113,21 +113,21 @@ void vga_fade_out(pal_t pal, clock_t delay) {
 
 			/* Decrease R values higher than the desired value. */
 			if (pal[c][VGA_R] > i) {
-			    outportb(0x03C9, i);
+				outportb(0x03C9, i);
 			} else {
 				outportb(0x03C9, pal[c][VGA_R]);
 			}
 
 			/* Decrease G values higher than the desired value. */
 			if (pal[c][VGA_G] > i) {
-			    outportb(0x03C9, i);
+				outportb(0x03C9, i);
 			} else {
 				outportb(0x03C9, pal[c][VGA_G]);
 			}
 
 			/* Decrease B values higher than the desired value. */
 			if (pal[c][VGA_B] > i) {
-			    outportb(0x03C9, i);
+				outportb(0x03C9, i);
 			} else {
 				outportb(0x03C9, pal[c][VGA_B]);
 			}
@@ -163,7 +163,7 @@ void vga_get_pal(pal_t pal) {
 	int c;
 
 	for (c = 0; c < VGA_COLNUM; c++) {
-		outportb(0x03C7, c);         /* Select the color. */
+		outportb(0x03C7, c);		 /* Select the color. */
 		pal[c][VGA_R] = inportb(0x03C9); /* Get the R value. */
 		pal[c][VGA_G] = inportb(0x03C9); /* Get the G value. */
 		pal[c][VGA_B] = inportb(0x03C9); /* Get the B value. */
@@ -290,7 +290,7 @@ void vga_set_pal(pal_t pal) {
 	int c;
 
 	for (c = 0; c < VGA_COLNUM; c++) {
-		outportb(0x03C8, c);         /* Select the color. */
+		outportb(0x03C8, c);		 /* Select the color. */
 		outportb(0x03C9, pal[c][VGA_R]); /* Set the R value. */
 		outportb(0x03C9, pal[c][VGA_G]); /* Set the G value. */
 		outportb(0x03C9, pal[c][VGA_B]); /* Set the B value. */

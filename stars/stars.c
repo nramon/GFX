@@ -3,9 +3,9 @@
 #include "vga.h"
 #include "stars.h"
 
-/*
- * Scrolling star field effect.
- */
+/******************************************************************************
+ * Scrolling star field effect.                                               *
+ ******************************************************************************/
 void main() {
 	int i;
 	byte_t c;
